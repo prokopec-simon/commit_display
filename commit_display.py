@@ -7,7 +7,7 @@ import questionary
 path = r'C:\Users\prokopec.simon\source'
 
 # Define the command to execute
-cmd = 'git log --since="1 month ago" --pretty=format:"%ad: %s" --date=format:"%Y-%m-%d" --all'
+cmd = 'git log --since="1 month 5 days ago" --pretty=format:"%ad: %s" --date=format:"%Y-%m-%d" --all'
 
 # Initialize the dictionary to hold the commit data
 commit_data = {}
