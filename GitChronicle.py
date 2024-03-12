@@ -3,6 +3,9 @@ import subprocess
 from datetime import datetime
 import questionary
 
+os.system('cls')
+print('Loading repositories...')
+
 # Define the path to search for git repositories
 path = r'C:\Users\prokopec.simon\source'
 
@@ -27,11 +30,18 @@ for root, dirs, files in os.walk(path):
             if len(output.strip()) > 0:
                 repositories_with_commits.append(repo_name)
 
+
+os.system('cls')
+
 # Ask user which repositories to ignore
 ignore_repositories = questionary.checkbox(
     "Select repositories to ignore",
     choices=repositories_with_commits
 ).ask()
+
+os.system('cls')
+print('Loading individual commits...')
+
 
 # Loop through each repository
 for root, dirs, files in os.walk(path):
@@ -58,6 +68,8 @@ for root, dirs, files in os.walk(path):
                     if date not in commit_data:
                         commit_data[date] = []
                     commit_data[date].append((repo_name, message))
+
+os.system('cls')
 
 # Print the commit data in order by date
 for date in sorted(commit_data.keys()):
