@@ -11,6 +11,7 @@ def get_default_path():
     return os.path.join(*path_components[:-1]) + "\\"
 
 def get_valid_path():
+    os.system('cls')
     path = questionary.text("Enter the path to search for git repositories:", default=get_default_path()).ask()
     while not os.path.exists(path):
         print("Invalid path. Please enter a valid path.")
@@ -18,6 +19,9 @@ def get_valid_path():
     return path
 
 def get_repositories_with_commits(path, cmd):
+    os.system('cls')
+    print('Loading repositories...')
+
     repositories_with_commits = []
     distinct_commit_authors = []
 
@@ -48,15 +52,24 @@ def get_users_to_show(distinct_commit_authors):
     return questionary.checkbox("Select users to show commits for", choices=distinct_commit_authors).ask()
 
 def get_ignore_repositories(repositories_with_commits, users_to_show):
-    return questionary.checkbox(
+    
+    selected_repositories_to_ignore = questionary.checkbox(
         "Select repositories to ignore",
         choices=[repo['name'] for repo in repositories_with_commits if any(user in users_to_show for user in repo['commits_from'])]
     ).ask()
+
+    repositories_without_commits = get_repositories_without_commits(repositories_with_commits, users_to_show)
+
+    return selected_repositories_to_ignore + repositories_without_commits
+
 
 def get_repositories_without_commits(repositories_with_commits, users_to_show):
     return [repo['name'] for repo in repositories_with_commits if not any(user in users_to_show for user in repo['commits_from'])]
 
 def load_commits(path, ignore_repositories, cmd):
+    os.system('cls')
+    print('Loading individual commits...')
+
     commit_data = {}
 
     for root, dirs, files in os.walk(path):
@@ -90,26 +103,16 @@ def print_commit_data(commit_data, users_to_show):
                 print(f'    {commit[0]} - {commit[1]}')
 
 def main():
-    os.system('cls')
-    path = get_valid_path()
+    path_to_browse = get_valid_path()
+    git_command = 'git log --since="1 month 5 days ago" --pretty=format:"%ad: %an - %s" --date=format:"%Y-%m-%d" --all'
 
-    cmd = 'git log --since="1 month 5 days ago" --pretty=format:"%ad: %an - %s" --date=format:"%Y-%m-%d" --all'
-
-
-    os.system('cls')
-    print('Loading repositories...')
-    repositories_with_commits, distinct_commit_authors = get_repositories_with_commits(path, cmd)
+    repositories_with_commits, distinct_commit_authors = get_repositories_with_commits(path_to_browse, git_command)
 
     users_to_show = get_users_to_show(distinct_commit_authors)
+
     ignore_repositories = get_ignore_repositories(repositories_with_commits, users_to_show)
-
-    repositories_without_commits = get_repositories_without_commits(repositories_with_commits, users_to_show)
-    ignore_repositories.extend(repositories_without_commits)
-
-    os.system('cls')
-    print('Loading individual commits...')
-
-    commit_data = load_commits(path, ignore_repositories, cmd)
+    
+    commit_data = load_commits(path_to_browse, ignore_repositories, git_command)
 
     print_commit_data(commit_data, users_to_show)
 
