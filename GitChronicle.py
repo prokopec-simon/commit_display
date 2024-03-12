@@ -4,18 +4,34 @@ from datetime import datetime
 import questionary
 
 os.system('cls')
-print('Loading repositories...')
 
-# Define the path to search for git repositories
-path = r'C:\Users\prokopec.simon\source'
+# Set the default path to the current working directory
+default_path = os.getcwd()
+path_components = default_path.split("\\")
+# Remove the last element (file name)
+if not path_components[0].endswith("\\"):
+    path_components[0] += "\\"
 
-# Define the command to execute
+# Remove the last element (file name) and rejoin the path components
+default_path = os.path.join(*path_components[:-1]) + "\\"
+# Ask user for the path to search for git repositories with the default value
+path = questionary.text("Enter the path to search for git repositories:", default=default_path).ask()
+
+# Validate if the path exists
+while not os.path.exists(path):
+    print("Invalid path. Please enter a valid path.")
+    path = questionary.text("Enter the path to search for git repositories:", default=default_path).ask()
+
+# Define the git command to browse for data in the last month and five days
 cmd = 'git log --since="1 month 5 days ago" --pretty=format:"%ad: %an - %s" --date=format:"%Y-%m-%d" --all'
 
 # Initialize the dictionaries to hold the commit data and user data
 commit_data = {}
 repositories_with_commits = []
-user_data = []
+distinct_commit_authors = []
+
+os.system('cls')
+print('Loading repositories...')
 
 # Get the list of repositories with commits
 for root, dirs, files in os.walk(path):
@@ -37,8 +53,8 @@ for root, dirs, files in os.walk(path):
                             parts = line.split(':')
                             name = parts[1].split(' - ')[0].strip()
                             authors.add(name)
-                            if name not in user_data:
-                                user_data.append(name)
+                            if name not in distinct_commit_authors:
+                                distinct_commit_authors.append(name)
                     repositories_with_commits.append({'name': repo_name, 'commits_from': authors})
             except subprocess.CalledProcessError as e:
                 print(f"Error executing git command in {repo_name}: {e}")
@@ -48,7 +64,7 @@ os.system('cls')
 # Ask user which users to show components for
 users_to_show = questionary.checkbox(
     "Select users to show commits for",
-    choices=user_data
+    choices=distinct_commit_authors
 ).ask()
 
 # Ask user which repositories to ignore
@@ -62,9 +78,6 @@ ignore_repositories.extend(repositories_without_any_commits_from_selected_users)
 
 os.system('cls')
 print('Loading individual commits...')
-
-# Loop through each repository
-
 # Loop through each repository
 for root, dirs, files in os.walk(path):
     for dir in dirs:
