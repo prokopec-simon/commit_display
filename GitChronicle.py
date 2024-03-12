@@ -8,7 +8,8 @@ os.system('cls')
 # Set the default path to the current working directory
 default_path = os.getcwd()
 path_components = default_path.split("\\")
-# Remove the last element (file name)
+
+# For some reason the joined path was missing \ after C:
 if not path_components[0].endswith("\\"):
     path_components[0] += "\\"
 
@@ -73,6 +74,7 @@ ignore_repositories = questionary.checkbox(
     choices=[repo['name'] for repo in repositories_with_commits if any(user in users_to_show for user in repo['commits_from'])]
 ).ask()
 
+#ignoring repositories that have no commits from selected users
 repositories_without_any_commits_from_selected_users = [repo['name'] for repo in repositories_with_commits if not any(user in users_to_show for user in repo['commits_from'])]
 ignore_repositories.extend(repositories_without_any_commits_from_selected_users)
 
@@ -112,6 +114,8 @@ for date in sorted(commit_data.keys()):
     print(f'[{date.strftime("%Y-%m-%d")}]:')
     for commit in commits:
         if(len(users_to_show)==1):
+            # If there is only one author do not print the name in the output
             print(f'    {commit[0]} - {commit[1].split(" - ")[1]}')
         else:
+            # Include author if more than one author is selected
             print(f'    {commit[0]} - {commit[1]}')
